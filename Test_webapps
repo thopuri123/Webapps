@@ -1,0 +1,32 @@
+jobs:
+
+- job: buildandtest
+  pool:
+    vmImage: 'ubuntu-16.04'
+  steps:
+  # publish an artifact called drop
+  - task: PublishBuildArtifacts@1
+
+  # deploy to Azure Web App staging
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: '<test stage Azure service connection>'
+      appName: '<name of test stage web app>'
+
+- job: deploy
+  pool:
+    vmImage: 'ubuntu-16.04'
+  dependsOn: buildandtest
+  condition: succeeded()
+  steps:
+
+  # download the artifact drop from the previous job
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      artifactName: drop
+
+  # deploy to Azure Web App production
+  - task: AzureWebApp@1
+    inputs:
+      azureSubscription: '<prod Azure service connection>'
+      appName: '<name of prod web app>'
